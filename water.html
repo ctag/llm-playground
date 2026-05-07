@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Water Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #111;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            color: white;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+        p {
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2D Water Simulation</h1>
+        <p>Move your cursor to create ripples</p>
+    </div>
+    <canvas id="waterCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('waterCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height, buffer1, buffer2, currentBuffer, nextBuffer;
+        let mouseX = -100, mouseY = -100;
+        let prevMouseX = -100, prevMouseY = -100;
+        
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            const size = width * height;
+            buffer1 = new Float32Array(size);
+            buffer2 = new Float32Array(size);
+            currentBuffer = buffer1;
+            nextBuffer = buffer2;
+        }
+        
+        function init() {
+            resize();
+            window.addEventListener('resize', resize);
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            requestAnimationFrame(animate);
+        }
+        
+        function animate() {
+            const dx = mouseX - prevMouseX;
+            const dy = mouseY - prevMouseY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0 && distance < 50) {
+                const index = Math.floor(mouseY) * width + Math.floor(mouseX);
+                if (index >= 0 && index < currentBuffer.length) {
+                    currentBuffer[index] += 500;
+                }
+            }
+            
+            prevMouseX = mouseX;
+            prevMouseY = mouseY;
+            
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const i = y * width + x;
+                    nextBuffer[i] = (
+                        currentBuffer[i - 1] +
+                        currentBuffer[i + 1] +
+                        currentBuffer[i - width] +
+                        currentBuffer[i + width]
+                    ) / 2 - nextBuffer[i];
+                    nextBuffer[i] *= 0.98;
+                }
+            }
+            
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const i = y * width + x;
+                    const amplitude = nextBuffer[i];
+                    const color = Math.abs(amplitude) / 20;
+                    
+                    let r, g, b;
+                    if (amplitude > 0) {
+                        r = Math.min(255, color * 3);
+                        g = Math.min(255, color);
+                        b = Math.min(255, color * 5);
+                    } else {
+                        r = Math.min(255, Math.abs(color));
+                        g = Math.min(255, Math.abs(color * 2));
+                        b = Math.min(255, Math.abs(color));
+                    }
+                    
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+            
+            const temp = currentBuffer;
+            currentBuffer = nextBuffer;
+            nextBuffer = temp;
+            
+            requestAnimationFrame(animate);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
