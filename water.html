@@ -52,16 +52,18 @@
         const canvas = document.getElementById('waterCanvas');
         const ctx = canvas.getContext('2d');
         
+        const RESOLUTION = 4;
+        
         let width, height, buffer1, buffer2, currentBuffer, nextBuffer;
         let mouseX = -100, mouseY = -100;
         let prevMouseX = -100, prevMouseY = -100;
         let firstMove = true;
         
         function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
+            width = Math.ceil(window.innerWidth / RESOLUTION);
+            height = Math.ceil(window.innerHeight / RESOLUTION);
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
             
             const size = width * height;
             buffer1 = new Float32Array(size);
@@ -86,9 +88,9 @@
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance > 0 || firstMove) {
-                const index = Math.floor(mouseY) * width + Math.floor(mouseX);
+                const index = Math.floor(mouseY / RESOLUTION) * width + Math.floor(mouseX / RESOLUTION);
                 if (index >= 0 && index < currentBuffer.length) {
-                    currentBuffer[index] += 1000;
+                    currentBuffer[index] += 2000;
                     firstMove = false;
                 }
             }
@@ -105,15 +107,15 @@
                         currentBuffer[i - width] +
                         currentBuffer[i + width]
                     ) / 2 - nextBuffer[i];
-                    nextBuffer[i] *= 0.95;
+                    nextBuffer[i] *= 0.99;
                 }
             }
             
-            for (let y = 1; y < height - 1; y++) {
-                for (let x = 1; x < width - 1; x++) {
+            for (let y = 1; y < height - 1; y += 2) {
+                for (let x = 1; x < width - 1; x += 2) {
                     const i = y * width + x;
                     const amplitude = nextBuffer[i];
-                    const color = Math.abs(amplitude) / 20;
+                    const color = Math.abs(amplitude) / 5;
                     
                     let r, g, b;
                     if (amplitude > 0) {
@@ -127,7 +129,7 @@
                     }
                     
                     ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-                    ctx.fillRect(x, y, 1, 1);
+                    ctx.fillRect(x * RESOLUTION, y * RESOLUTION, RESOLUTION, RESOLUTION);
                 }
             }
             
