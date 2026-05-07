@@ -111,8 +111,8 @@
                 }
             }
             
-            for (let y = 1; y < height - 1; y += 2) {
-                for (let x = 1; x < width - 1; x += 2) {
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
                     const i = y * width + x;
                     const amplitude = nextBuffer[i];
                     const color = Math.abs(amplitude) / 5;
